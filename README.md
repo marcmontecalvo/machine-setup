@@ -2,11 +2,11 @@
 
 Repeatable workstation and server setup for Linux, macOS, and Windows.
 
-The repository is organized into small modules so features can be added, removed, or run independently without turning the main setup scripts into one large file.
+Each feature is kept in a separate module. Running the main script without arguments opens a small terminal menu where modules can be enabled or disabled before anything changes.
 
 ## Configure your identity first
 
-Edit `config/settings.json` before running anything:
+Edit `config/settings.json`:
 
 ```json
 {
@@ -17,11 +17,20 @@ Edit `config/settings.json` before running anything:
   },
   "git": {
     "default_branch": "main"
+  },
+  "ssh": {
+    "port": 22,
+    "permit_root_login": false,
+    "password_authentication": false
+  },
+  "system": {
+    "hostname": "",
+    "timezone": ""
   }
 }
 ```
 
-These values are used to configure Git and retrieve the GitHub account's public SSH keys. The setup scripts refuse to run while the placeholder values are still present.
+The scripts refuse to run while the identity placeholders remain. Blank hostname and timezone values are allowed because the `system` module can prompt for them interactively.
 
 ## Linux and macOS
 
@@ -32,15 +41,17 @@ nano config/settings.json
 bash setup.sh
 ```
 
-Run selected modules only:
+Running `setup.sh` opens the module selector. Toggle an item by entering its number, then press Enter or `R` to run the selected modules.
+
+Modules can also be supplied directly:
 
 ```bash
-bash setup.sh git history tools shell
+bash setup.sh git history starship zoxide eza
 ```
 
 ## Windows
 
-Run PowerShell as your normal user:
+Run PowerShell as your normal user. Modules that configure Windows services or system identity may trigger an elevation prompt.
 
 ```powershell
 git clone https://github.com/marcmontecalvo/machine-setup.git
@@ -50,35 +61,40 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\setup.ps1
 ```
 
-Run selected modules only:
+Run specific modules without the menu:
 
 ```powershell
-.\setup.ps1 -Modules git,history,tools
+.\setup.ps1 -Modules git,history,starship,zoxide,eza
 ```
 
-## Included modules
+## Modules
 
 | Module | Platforms | Purpose |
 |---|---|---|
-| `git` | Linux, macOS, Windows | Installs Git, configures the identity and defaults from `settings.json`, and adds the GitHub account's public SSH keys to `authorized_keys`. |
-| `history` | Linux, macOS, Windows | Enables prefix-based Up/Down history search and improves shell-history behavior. |
-| `tools` | Linux, macOS, Windows | Installs a compact set of useful command-line tools when supported by the operating system. |
+| `git` | Linux, macOS, Windows | Installs Git, configures identity and defaults, and adds the GitHub account's public SSH keys to `authorized_keys`. |
+| `history` | Linux, macOS, Windows | Enables prefix-based Up/Down shell-history search and improved history behavior. |
+| `tools` | Linux, macOS, Windows | Installs the existing baseline of useful command-line utilities. |
 | `shell` | Linux, macOS | Adds restrained aliases and shell quality-of-life defaults. |
+| `docker` | Linux, macOS, Windows | Installs Docker Engine or Docker Desktop and Docker Compose. |
+| `ssh-hardening` | Linux, Windows | Installs OpenSSH Server and applies settings from `settings.json`. |
+| `tailscale` | Linux, macOS, Windows | Installs Tailscale; interactive account authentication remains required. |
+| `github-cli` | Linux, macOS, Windows | Installs `gh` and starts GitHub's interactive browser authentication when needed. |
+| `starship` | Linux, macOS, Windows | Installs and enables the Starship prompt. |
+| `direnv` | Linux, macOS, Windows | Installs per-directory environment handling. |
+| `zoxide` | Linux, macOS, Windows | Installs and enables smart directory jumping. |
+| `eza` | Linux, macOS, Windows | Installs modern directory listings and useful aliases/functions. |
+| `tmux` | Linux, macOS, Windows through WSL | Installs tmux and writes a practical mouse-enabled configuration. |
+| `networking` | Linux, macOS, Windows | Installs common DNS, routing, socket, throughput, and packet-analysis tools. |
+| `system` | Linux, macOS, Windows | Prompts to keep, configure, or enter hostname and timezone values. |
 
-The current Unix tools baseline includes packages such as `jq`, `ripgrep`, `fd`, `fzf`, `bat`, `tree`, `tmux`, and `htop`, depending on package-manager availability.
+## Menu defaults
 
-## Suggested but not yet included
+Most modules are selected by default. These are intentionally disabled until explicitly selected:
 
-These were discussed but are not currently installed or configured by the repository:
+- `ssh-hardening`, because disabling passwords or changing the SSH port can lock out a remote user.
+- `system`, because hostname changes can require a restart and may affect other services.
 
-- Starship prompt
-- direnv
-- zoxide
-- eza
-- dmux
-- opinionated tmux configuration
-
-`tmux` itself is installed by the Unix `tools` module, but a custom tmux configuration has not yet been added. dmux is a separate developer-focused tool that uses tmux for parallel coding-agent and worktree sessions.
+Use `A` in the menu to select everything or `N` to clear everything.
 
 ## SSH-key behavior
 
@@ -88,12 +104,14 @@ The Git module downloads public keys from:
 https://github.com/<github_username>.keys
 ```
 
-It adds missing keys to `~/.ssh/authorized_keys` and does not download, create, copy, or expose private keys. This authorizes SSH access to the machine using keys already published on that GitHub account; it does not create a local key for pushing to GitHub.
+It adds missing keys to `authorized_keys`. It never downloads or creates private keys. This authorizes keys already published on the GitHub account to connect to the computer; it does not give the computer a private key for pushing to GitHub.
 
-## Safety and behavior
+The SSH hardening module validates the generated server configuration before restarting SSH. Review `config/settings.json` and confirm key-based access works before enabling it on a remote-only server.
 
-- Scripts are intended to be idempotent.
-- Existing configuration files are preserved where practical.
-- Managed sections are clearly marked and replaced on later runs.
-- Modules can be run independently.
-- User-specific values live in one shared JSON settings file.
+## Notes
+
+- Scripts are intended to be idempotent, though third-party installers may still display their own prompts.
+- Existing configuration is preserved where practical; the tmux module creates a backup before replacing `~/.tmux.conf`.
+- Docker Desktop, Tailscale, and GitHub CLI still require their normal first-run authentication or initialization.
+- Windows tmux support uses the default WSL distribution.
+- `dmux` is not included yet; it is a specialized developer tool built on top of tmux.
