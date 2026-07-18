@@ -2,8 +2,35 @@
 set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=config/settings.env
-source "$ROOT_DIR/config/settings.env"
+SETTINGS_FILE="$ROOT_DIR/config/settings.json"
+
+if [[ ! -f "$SETTINGS_FILE" ]]; then
+  echo "Missing settings file: $SETTINGS_FILE" >&2
+  exit 1
+fi
+
+json_value() {
+  local key="$1"
+  sed -nE 's/^[[:space:]]*"'"$key"'"[[:space:]]*:[[:space:]]*"([^"]*)".*/\1/p' "$SETTINGS_FILE" | head -n 1
+}
+
+GIT_NAME="$(json_value name)"
+GIT_EMAIL="$(json_value email)"
+GITHUB_USERNAME="$(json_value github_username)"
+GIT_DEFAULT_BRANCH="$(json_value default_branch)"
+
+if [[ -z "$GIT_NAME" || -z "$GIT_EMAIL" || -z "$GITHUB_USERNAME" ]]; then
+  echo "Complete config/settings.json before running setup." >&2
+  exit 1
+fi
+
+if [[ "$GIT_NAME" == "Your Name" || "$GIT_EMAIL" == "you@example.com" || "$GITHUB_USERNAME" == "your-github-username" ]]; then
+  echo "Replace the placeholder values in config/settings.json before running setup." >&2
+  exit 1
+fi
+
+GIT_DEFAULT_BRANCH="${GIT_DEFAULT_BRANCH:-main}"
+export GIT_NAME GIT_EMAIL GITHUB_USERNAME GIT_DEFAULT_BRANCH
 
 AVAILABLE=(git history tools shell)
 if (( $# == 0 )); then
