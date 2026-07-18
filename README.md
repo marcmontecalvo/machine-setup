@@ -7,13 +7,13 @@ Repeatable workstation and server setup for Linux, macOS, and Windows.
 ```bash
 git clone https://github.com/marcmontecalvo/machine-setup.git
 cd machine-setup
-./setup.sh
+bash setup.sh
 ```
 
 Run selected modules:
 
 ```bash
-./setup.sh git history tools
+bash setup.sh git history tools
 ```
 
 Available modules:
@@ -35,7 +35,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 Or select modules:
 
 ```powershell
-.\setup.ps1 git,history,tools
+.\setup.ps1 -Modules git,history,tools
 ```
 
 ## Configuration
