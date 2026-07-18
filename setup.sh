@@ -57,10 +57,13 @@ choose_modules() {
   local -a enabled=()
   local input index
   for ((index=0; index<${#AVAILABLE[@]}; index++)); do enabled[index]=1; done
+  enabled[5]=0
+  enabled[14]=0
   while true; do
     clear 2>/dev/null || true
     echo "Machine Setup"
     echo "Toggle modules by number. A=all, N=none, R=run, Q=quit."
+    echo "SSH hardening and system identity changes are off by default."
     echo
     for ((index=0; index<${#AVAILABLE[@]}; index++)); do
       printf '%2d. [%s] %-15s %s\n' "$((index+1))" "$([[ ${enabled[index]} -eq 1 ]] && echo x || echo ' ')" "${AVAILABLE[index]}" "${DESCRIPTIONS[index]}"
