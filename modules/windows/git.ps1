@@ -10,7 +10,7 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
 
 git config --global user.name $GitName
 git config --global user.email $GitEmail
-git config --global init.defaultBranch main
+git config --global init.defaultBranch $GitDefaultBranch
 git config --global pull.ff only
 git config --global fetch.prune true
 git config --global rebase.autoStash true
