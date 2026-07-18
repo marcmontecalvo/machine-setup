@@ -20,7 +20,7 @@ setup_git() {
 
   git config --global user.name "$GIT_NAME"
   git config --global user.email "$GIT_EMAIL"
-  git config --global init.defaultBranch main
+  git config --global init.defaultBranch "$GIT_DEFAULT_BRANCH"
   git config --global pull.ff only
   git config --global fetch.prune true
   git config --global rebase.autoStash true
