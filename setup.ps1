@@ -27,10 +27,13 @@ $Available = [ordered]@{
 
 if (-not $PSBoundParameters.ContainsKey('Modules')) {
     $Enabled = @{}; foreach ($Name in $Available.Keys) { $Enabled[$Name] = $true }
+    $Enabled['ssh-hardening']=$false
+    $Enabled['system']=$false
     while ($true) {
         Clear-Host
         Write-Host 'Machine Setup'
         Write-Host 'Toggle by number. A=all, N=none, R=run, Q=quit.'
+        Write-Host 'SSH hardening and system identity changes are off by default.'
         $Names = @($Available.Keys)
         for ($i=0; $i -lt $Names.Count; $i++) {
             $mark = if ($Enabled[$Names[$i]]) { 'x' } else { ' ' }
