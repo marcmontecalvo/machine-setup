@@ -6,7 +6,11 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$ROOT_DIR/config/settings.env"
 
 AVAILABLE=(git history tools shell)
-SELECTED=("${@:-${AVAILABLE[@]}}")
+if (( $# == 0 )); then
+  SELECTED=("${AVAILABLE[@]}")
+else
+  SELECTED=("$@")
+fi
 
 for module in "${SELECTED[@]}"; do
   case "$module" in
