@@ -4,9 +4,27 @@ Repeatable workstation and server setup for Linux, macOS, and Windows.
 
 Each feature is kept in a separate module. Running the main script without arguments opens a small terminal menu where modules can be enabled or disabled before anything changes.
 
-## Configure your identity first
+## Quick install for Linux and macOS
 
-Edit `config/settings.json`:
+```bash
+curl -fsSL https://raw.githubusercontent.com/marcmontecalvo/machine-setup/main/install.sh | bash
+```
+
+The installer downloads the current repository into `~/.local/share/machine-setup`, prompts for the Git name, email, GitHub username, and default branch on the first run, then opens the module selector. Existing `config/settings.json` values are preserved when the command is run again.
+
+Do **not** run the entire installer with `sudo`. The setup contains user-level Git, SSH, shell, and prompt configuration that must be written to the normal user's home directory. Individual modules request `sudo` only when system-level changes require it.
+
+A different install location or branch can be selected through environment variables:
+
+```bash
+MACHINE_SETUP_HOME="$HOME/machine-setup" \
+MACHINE_SETUP_BRANCH="main" \
+curl -fsSL https://raw.githubusercontent.com/marcmontecalvo/machine-setup/main/install.sh | bash
+```
+
+## Configuration
+
+The quick installer creates this file interactively on the first run. For a manual clone, edit `config/settings.json` before running setup:
 
 ```json
 {
@@ -32,7 +50,7 @@ Edit `config/settings.json`:
 
 The scripts refuse to run while the identity placeholders remain. Blank hostname and timezone values are allowed because the `system` module can prompt for them interactively.
 
-## Linux and macOS
+## Manual Linux and macOS setup
 
 ```bash
 git clone https://github.com/marcmontecalvo/machine-setup.git
@@ -110,6 +128,7 @@ The SSH hardening module validates the generated server configuration before res
 
 ## Notes
 
+- The curl bootstrap requires `curl`, `tar`, and Python 3.
 - Scripts are intended to be idempotent, though third-party installers may still display their own prompts.
 - Existing configuration is preserved where practical; the tmux module creates a backup before replacing `~/.tmux.conf`.
 - Docker Desktop, Tailscale, and GitHub CLI still require their normal first-run authentication or initialization.
