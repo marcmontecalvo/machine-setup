@@ -7,6 +7,6 @@ setup_direnv() {
     elif command -v pacman >/dev/null; then sudo pacman -Sy --needed --noconfirm direnv
     else echo "Unsupported package manager." >&2; return 1; fi
   fi
-  grep -q 'direnv hook bash' "$HOME/.bashrc" 2>/dev/null || printf '\n# machine-setup: direnv\neval "$(direnv hook bash)"\n' >> "$HOME/.bashrc"
-  grep -q 'direnv hook zsh' "$HOME/.zshrc" 2>/dev/null || printf '\n# machine-setup: direnv\neval "$(direnv hook zsh)"\n' >> "$HOME/.zshrc"
+  replace_managed_block "$HOME/.bashrc" "direnv" 'eval "$(direnv hook bash)"'
+  replace_managed_block "$HOME/.zshrc" "direnv" 'eval "$(direnv hook zsh)"'
 }
