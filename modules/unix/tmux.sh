@@ -7,8 +7,9 @@ setup_tmux() {
     elif command -v pacman >/dev/null; then sudo pacman -Sy --needed --noconfirm tmux
     else echo "Unsupported package manager." >&2; return 1; fi
   fi
-  [[ -f "$HOME/.tmux.conf" ]] && cp "$HOME/.tmux.conf" "$HOME/.tmux.conf.machine-setup-backup"
-  cat > "$HOME/.tmux.conf" <<'EOF'
+
+  local block
+  block=$(cat <<'EOF'
 set -g mouse on
 set -g history-limit 100000
 set -g base-index 1
@@ -22,4 +23,6 @@ bind | split-window -h -c "#{pane_current_path}"
 bind - split-window -v -c "#{pane_current_path}"
 bind c new-window -c "#{pane_current_path}"
 EOF
+)
+  replace_managed_block "$HOME/.tmux.conf" "tmux" "$block"
 }
