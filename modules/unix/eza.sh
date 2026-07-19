@@ -7,14 +7,13 @@ setup_eza() {
     elif command -v pacman >/dev/null; then sudo pacman -Sy --needed --noconfirm eza
     else echo "Install eza manually on this platform." >&2; return 1; fi
   fi
-  for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
-    touch "$rc"
-    grep -q "alias ls='eza" "$rc" || cat >> "$rc" <<'EOF'
-
-# machine-setup: eza
+  local block
+  block=$(cat <<'EOF'
 alias ls='eza --group-directories-first'
 alias ll='eza -lah --group-directories-first --git'
 alias tree='eza --tree'
 EOF
-  done
+)
+  replace_managed_block "$HOME/.bashrc" "eza" "$block"
+  replace_managed_block "$HOME/.zshrc" "eza" "$block"
 }
