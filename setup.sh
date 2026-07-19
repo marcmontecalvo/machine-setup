@@ -3,6 +3,8 @@ set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SETTINGS_FILE="$ROOT_DIR/config/settings.json"
+# shellcheck source=lib/unix/config.sh
+source "$ROOT_DIR/lib/unix/config.sh"
 AVAILABLE=(git history tools shell docker ssh-hardening tailscale github-cli starship direnv zoxide eza tmux networking system)
 DESCRIPTIONS=(
   "Git, identity, defaults, and GitHub public SSH keys"
