@@ -7,6 +7,6 @@ setup_zoxide() {
     elif command -v pacman >/dev/null; then sudo pacman -Sy --needed --noconfirm zoxide
     else curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh; fi
   fi
-  grep -q 'zoxide init bash' "$HOME/.bashrc" 2>/dev/null || printf '\n# machine-setup: zoxide\neval "$(zoxide init bash)"\n' >> "$HOME/.bashrc"
-  grep -q 'zoxide init zsh' "$HOME/.zshrc" 2>/dev/null || printf '\n# machine-setup: zoxide\neval "$(zoxide init zsh)"\n' >> "$HOME/.zshrc"
+  replace_managed_block "$HOME/.bashrc" "zoxide" 'eval "$(zoxide init bash)"'
+  replace_managed_block "$HOME/.zshrc" "zoxide" 'eval "$(zoxide init zsh)"'
 }
