@@ -27,21 +27,34 @@ curl -fsSL "$ARCHIVE_URL" | tar -xz -C "$TEMP_DIR"
 SOURCE_DIR="$(find "$TEMP_DIR" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
 [[ -n "$SOURCE_DIR" ]] || { echo "Unable to locate downloaded files." >&2; exit 1; }
 
-SAVED_SETTINGS=""
-if [[ -f "$INSTALL_DIR/config/settings.json" ]]; then
-  SAVED_SETTINGS="$TEMP_DIR/settings.json"
-  cp "$INSTALL_DIR/config/settings.json" "$SAVED_SETTINGS"
+mkdir -p "$INSTALL_DIR"
+if [[ -d "$INSTALL_DIR" ]]; then
+  printf 'Updating existing installation without deleting local files...\n'
 fi
 
-mkdir -p "$(dirname "$INSTALL_DIR")"
-rm -rf "$INSTALL_DIR"
-mkdir -p "$INSTALL_DIR"
-cp -R "$SOURCE_DIR"/. "$INSTALL_DIR"/
+# Copy repository files over the existing installation. This updates managed files
+# while preserving settings.json and any user-created files not present upstream.
+while IFS= read -r -d '' source; do
+  relative="${source#"$SOURCE_DIR"/}"
+  target="$INSTALL_DIR/$relative"
+  if [[ -d "$source" ]]; then
+    mkdir -p "$target"
+  else
+    mkdir -p "$(dirname "$target")"
+    if [[ "$relative" == "config/settings.json" && -f "$target" ]]; then
+      continue
+    fi
+    temp_target="$(mktemp "$(dirname "$target")/.machine-setup.XXXXXX")"
+    cp -p "$source" "$temp_target"
+    if [[ -f "$target" ]] && cmp -s "$temp_target" "$target"; then
+      rm -f "$temp_target"
+    else
+      mv -f "$temp_target" "$target"
+    fi
+  fi
+done < <(find "$SOURCE_DIR" -mindepth 1 -print0)
 
-if [[ -n "$SAVED_SETTINGS" ]]; then
-  cp "$SAVED_SETTINGS" "$INSTALL_DIR/config/settings.json"
-  printf 'Preserved existing settings.\n'
-else
+if [[ ! -f "$INSTALL_DIR/config/settings.json" ]] || grep -q '"Your Name"' "$INSTALL_DIR/config/settings.json"; then
   printf '\nFirst-run configuration\n'
   read -r -p 'Full name: ' USER_NAME <"$TTY"
   read -r -p 'Email address: ' USER_EMAIL <"$TTY"
@@ -54,38 +67,23 @@ else
     exit 1
   fi
 
-  if ! command -v python3 >/dev/null 2>&1; then
-    echo "python3 is required to create and read config/settings.json." >&2
-    echo "Install Python 3, then rerun this command." >&2
-    exit 1
-  fi
-
-  SETTINGS_PATH="$INSTALL_DIR/config/settings.json" \
-  USER_NAME="$USER_NAME" USER_EMAIL="$USER_EMAIL" \
-  GITHUB_USERNAME="$GITHUB_USERNAME" DEFAULT_BRANCH="$DEFAULT_BRANCH" \
-  python3 <<'PY'
-import json
-import os
+  command -v python3 >/dev/null 2>&1 || { echo "python3 is required." >&2; exit 1; }
+  SETTINGS_PATH="$INSTALL_DIR/config/settings.json" USER_NAME="$USER_NAME" USER_EMAIL="$USER_EMAIL" GITHUB_USERNAME="$GITHUB_USERNAME" DEFAULT_BRANCH="$DEFAULT_BRANCH" python3 <<'PY'
+import json, os
 from pathlib import Path
-
 settings = {
-    "user": {
-        "name": os.environ["USER_NAME"],
-        "email": os.environ["USER_EMAIL"],
-        "github_username": os.environ["GITHUB_USERNAME"],
-    },
+    "user": {"name": os.environ["USER_NAME"], "email": os.environ["USER_EMAIL"], "github_username": os.environ["GITHUB_USERNAME"]},
     "git": {"default_branch": os.environ["DEFAULT_BRANCH"]},
-    "ssh": {
-        "port": 22,
-        "permit_root_login": False,
-        "password_authentication": False,
-    },
+    "ssh": {"port": 22, "permit_root_login": False, "password_authentication": False},
     "system": {"hostname": "", "timezone": ""},
 }
-Path(os.environ["SETTINGS_PATH"]).write_text(
-    json.dumps(settings, indent=2) + "\n", encoding="utf-8"
-)
+path = Path(os.environ["SETTINGS_PATH"])
+tmp = path.with_suffix(path.suffix + ".tmp")
+tmp.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+tmp.replace(path)
 PY
+else
+  printf 'Preserved existing settings.\n'
 fi
 
 chmod +x "$INSTALL_DIR/setup.sh" "$INSTALL_DIR/install.sh"
