@@ -3,6 +3,7 @@ param([string[]]$Modules)
 
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
+. (Join-Path $Root 'lib\windows\config.ps1')
 $SettingsPath = Join-Path $Root 'config\settings.json'
 if (-not (Test-Path $SettingsPath)) { throw "Missing settings file: $SettingsPath" }
 $Settings = Get-Content -Raw $SettingsPath | ConvertFrom-Json
