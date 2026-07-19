@@ -10,7 +10,7 @@ Each feature is kept in a separate module. Running the main script without argum
 curl -fsSL https://raw.githubusercontent.com/marcmontecalvo/machine-setup/main/install.sh | bash
 ```
 
-The installer downloads the current repository into `~/.local/share/machine-setup`, prompts for the Git name, email, GitHub username, and default branch on the first run, then opens the module selector. Existing `config/settings.json` values are preserved when the command is run again.
+The installer downloads the current repository into `~/.local/share/machine-setup`, prompts for the Git name, email, GitHub username, and default branch on the first run, then opens the module selector. Existing `config/settings.json` values and locally added files are preserved when the command is run again.
 
 Do **not** run the entire installer with `sudo`. The setup contains user-level Git, SSH, shell, and prompt configuration that must be written to the normal user's home directory. Individual modules request `sudo` only when system-level changes require it.
 
@@ -126,11 +126,19 @@ It adds missing keys to `authorized_keys`. It never downloads or creates private
 
 The SSH hardening module validates the generated server configuration before restarting SSH. Review `config/settings.json` and confirm key-based access works before enabling it on a remote-only server.
 
+## Rerun safety
+
+- Shell and PowerShell profile changes are stored in named `machine-setup` blocks. Rerunning a module replaces its existing block instead of appending another copy.
+- Before the first managed change to an existing file, the original is saved beside it as `<filename>.machine-setup-backup`. That backup is not overwritten by later runs.
+- Files are generated into temporary files and moved into place only when their content changed.
+- Existing content outside managed blocks is retained, including custom tmux settings.
+- The curl updater overlays repository files without deleting locally added files and always preserves `config/settings.json`.
+- GitHub public SSH keys are added only when the exact key is not already present.
+
 ## Notes
 
 - The curl bootstrap requires `curl`, `tar`, and Python 3.
-- Scripts are intended to be idempotent, though third-party installers may still display their own prompts.
-- Existing configuration is preserved where practical; the tmux module creates a backup before replacing `~/.tmux.conf`.
+- Package managers and third-party installers may still display their own prompts or perform normal upgrades on repeat runs.
 - Docker Desktop, Tailscale, and GitHub CLI still require their normal first-run authentication or initialization.
 - Windows tmux support uses the default WSL distribution.
 - `dmux` is not included yet; it is a specialized developer tool built on top of tmux.
